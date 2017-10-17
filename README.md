@@ -1,11 +1,7 @@
 # Youtube Data Prediction
 
 ## Abstract:
-Analysis of user comments extracted from Youtube's API
-
-*or*
-
- Predictive analytics on videos from Youtube's API
+Use Youtube's API to analyze data from successful channels to look at up and coming youtube channels to predict when we think success will be achieved, or not at all. 
  
 
 ## Contributors:

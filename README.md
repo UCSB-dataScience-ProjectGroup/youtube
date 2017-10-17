@@ -20,7 +20,7 @@ Use Youtube's API to analyze data from successful channels to look at up and com
 
 **Week 4**: Extract data, get familiar with API data
 
-**Week 5**: 
+**Week 5**: Clean data
 
 **Week 6**: 
 

@@ -1,7 +1,5 @@
 # Youtube Data Prediction
 
-![logo](https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fnetdna.webdesignerdepot.com%2Fuploads%2F2013%2F09%2Fnew_youtube_logo.jpg&f=1)
-
 ## Abstract:
 Use Youtube's API to analyze data from successful channels to look at up and coming youtube channels to predict when we think success will be achieved, or not at all. 
  
@@ -22,11 +20,11 @@ Use Youtube's API to analyze data from successful channels to look at up and com
 
 **Week 4**: Extract data, get familiar with API data
 
-**Week 5**: Clean data
+**Week 5**: Choose Successful channels we want to analyze
 
-**Week 6**: 
+**Week 6**: Choose rising channels we want to analyze
 
-**Week 7**: 
+**Week 7**: Have prediction algorythm finalized
 
 **Week 8**: Data visualization of results
 

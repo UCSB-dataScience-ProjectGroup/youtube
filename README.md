@@ -1,5 +1,7 @@
 # Youtube Data Prediction
 
+![logo](https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fnetdna.webdesignerdepot.com%2Fuploads%2F2013%2F09%2Fnew_youtube_logo.jpg&f=1)
+
 ## Abstract:
 Use Youtube's API to analyze data from successful channels to look at up and coming youtube channels to predict when we think success will be achieved, or not at all. 
  

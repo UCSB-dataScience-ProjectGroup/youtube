@@ -22,11 +22,11 @@ Use Youtube's API to analyze data from successful channels to look at up and com
 
 **Week 4**: Extract data, get familiar with API data
 
-**Week 5**: Choose Successful channels we want to analyze
+**Week 5**: Start collecting comment data
 
-**Week 6**: Choose rising channels we want to analyze
+**Week 6**: Collect and clean more data 
 
-**Week 7**: Have prediction algorythm finalized
+**Week 7**: Have "positive or negative" algorithm finalized
 
 **Week 8**: Data visualization of results
 

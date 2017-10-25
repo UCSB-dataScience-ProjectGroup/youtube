@@ -92,7 +92,7 @@ def build_resource(properties):
 def remove_empty_kwargs(**kwargs):
   good_kwargs = {}
   if kwargs is not None:
-    for key, value in kwargs.iteritems():
+    for key, value in kwargs.items():
       if value:
         good_kwargs[key] = value
   return good_kwargs

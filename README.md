@@ -22,9 +22,9 @@ Use Youtube's API to analyze data from successful channels to look at up and com
 
 **Week 4**: Extract data, get familiar with API data
 
-**Week 5**: Start collecting comment data
+**Week 5**: Start collecting comment data, put into SQL database
 
-**Week 6**: Collect and clean more data 
+**Week 6**: Work with SQL database & practice applying NLP techniques on comments
 
 **Week 7**: Have "positive or negative" algorithm finalized
 
@@ -37,7 +37,7 @@ Use Youtube's API to analyze data from successful channels to look at up and com
 
 
 ## Links:
-[Requirements](https://github.com/UCSB-dataScience-ProjectGroup/youtube)
+[Requirements](https://github.com/UCSB-dataScience-ProjectGroup/youtube/requirements.txt)
 
 [Scripts](https://github.com/UCSB-dataScience-ProjectGroup/youtube)
 

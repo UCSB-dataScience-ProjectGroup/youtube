@@ -2,18 +2,22 @@ import psycopg2 # for working with postgres
 import io
 import json
 import pandas as pd
-import ConfigParser
+import configparser # ConfigParser in Python 2!
 
-Config = ConfigParser.ConfigParser()
+Config = configparser.ConfigParser() 
 Config.read("config.ini")
+# Config.sections()  # see section csontents of config file
+# Config.options('SectionOne') # see arguments in first section
 
-Ydata = io.open(r'/Users/Youtube/Comments1.json', encoding = "utf-8")
+Ydata = io.open(r'~/Comments1.json', encoding = "utf-8")
 readAll = Ydata.readlines()
 
-conn = psycopg2.connect(Config.get('SectionOne', 'dbname', 'user', 'password')) # create a connection to databse; uses arguments provided in config.ini file
+conn = psycopg2.connect(Config.get('dbname', 'user', 'password')) # create a connection to databse; uses arguments provided in config.ini file
 cur = conn.cursor() # Create a cursor to execute SQL commands
 
 cur.execute("CREATE TABLE YTComments (data json);") #Create table called YTComments
+
+#cur.executemany("INSERT INTO YTComments VALUES ('{0}')".format(readAll))
 cur.execute("INSERT INTO YTComments VALUES (%s)" , readAll) # insert JSON formatted comments into table
 
 # side notes:

@@ -127,5 +127,3 @@ textFormat="plainText")
 
 print(data)
 
-
-

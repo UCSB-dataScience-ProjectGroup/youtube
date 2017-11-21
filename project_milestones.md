@@ -13,4 +13,11 @@ Accomplished Today:
 Next Steps:
 + Parse through comments and dump into a list
 
+## 11/20/17
+Accomplished Today:
++ Debugging and catching up on code 
 
+Next Steps:
++ Finish Naive Bayes classifier & api call script
++ Run classification 
++ Separate Narive Bayes classifier script from api call script

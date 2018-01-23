@@ -12,7 +12,8 @@
 	
 3. Install requirements  <br />
 	[Requirements](https://github.com/UCSB-dataScience-ProjectGroup/youtube/requirements.txt) <br />
-	
+	* activate your virtual environment: source venv/bin/activate
+	* run: $ pip install -r requirements.txt $
 	
 3. Run the CommentThread.py file to extract comments from the API  <br />
 	[Comment Thread File](https://github.com/UCSB-dataScience-ProjectGroup/youtube/CommentThread.py) <br />

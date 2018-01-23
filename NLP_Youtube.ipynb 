@@ -1,0 +1,605 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[nltk_data] Downloading package stopwords to\n",
+      "[nltk_data]     /Users/andiedonovan/nltk_data...\n",
+      "[nltk_data]   Package stopwords is already up-to-date!\n",
+      "[nltk_data] Downloading package punkt to\n",
+      "[nltk_data]     /Users/andiedonovan/nltk_data...\n",
+      "[nltk_data]   Package punkt is already up-to-date!\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import os\n",
+    "import csv\n",
+    "import scipy\n",
+    "import numpy as np\n",
+    "import pandas as pd # data manipulation\n",
+    "import random\n",
+    "\n",
+    "## NLTK\n",
+    "import nltk\n",
+    "from nltk.corpus import stopwords\n",
+    "nltk.download('stopwords')\n",
+    "nltk.download('punkt')\n",
+    "from nltk.stem import PorterStemmer\n",
+    "from nltk.tokenize import sent_tokenize, word_tokenize\n",
+    "\n",
+    "## SKLEARN\n",
+    "import sklearn # machine learning\n",
+    "from sklearn.feature_extraction.text import CountVectorizer\n",
+    "from nltk.tokenize import sent_tokenize, word_tokenize\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn import metrics\n",
+    "from sklearn.naive_bayes import MultinomialNB # multinomial Naive Bayes classifier is suitable for classification with discrete features (e.g., word counts for text classification). \n",
+    "# The multinomial distribution normally requires integer feature counts"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "os.chdir('/Users/andiedonovan/myProjects/Youtube/') # set to your own working directory!!!\n",
+    "df = pd.read_csv('labeledCom.csv', delimiter=\";\", skiprows=2, encoding='latin-1', engine='python') # we set it to latin because the standard UTF-8 encoding couldn't process some of the non-english characters  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "# rename columns\n",
+    "df.columns = [\n",
+    "  'label',\n",
+    "  'comment', \n",
+    "  'column3'\n",
+    "] "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "1095"
+      ]
+     },
+     "execution_count": 52,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "our_labs = [-1, 0, 1]\n",
+    "lab = df.loc[df['label'].isin(our_labs)]\n",
+    "len(df.index) # length of whole excel sheet\n",
+    "len(lab.index) # length of labeled data in excel sheet"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   label                                            comment  column3\n",
+      "0   -1.0  Everyone knows brand's papers from.\\nBut -No o...      NaN\n",
+      "1    0.0       ñYour paper cut balance is: \\n-£25279102771î      NaN\n",
+      "2    1.0  OH SHIT WHEN I SAW THIS ON MY FRONT PAGE.........      NaN\n",
+      "3    1.0                          Blowing my mind yet again      NaN\n",
+      "4    0.0               Should have gone with Dunder Mifflin      NaN\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(lab.head(5))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "lab = lab.drop('column3', axis = 1) # drop column 3 "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Index(['label', 'comment'], dtype='object')\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(lab.columns)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 88,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "557\n"
+     ]
+    }
+   ],
+   "source": [
+    "x_sent = sent_tokenize(str(lab['comment'])) # tozenize by sentence \n",
+    "x_word = word_tokenize(str(lab['comment'])) # tokenize by word\n",
+    "# x_word = word_tokenize(lab.iloc[:,1])\n",
+    "\n",
+    "print(len(x_word))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 92,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "TypeError",
+     "evalue": "expected string or bytes-like object",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-92-100093c8eefc>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0mtest_list\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mlist\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mlab\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m'comment'\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      2\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 3\u001b[0;31m \u001b[0mtest_sent\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0msent_tokenize\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mword\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0mword\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mtest_list\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/__init__.py\u001b[0m in \u001b[0;36msent_tokenize\u001b[0;34m(text, language)\u001b[0m\n\u001b[1;32m     93\u001b[0m     \"\"\"\n\u001b[1;32m     94\u001b[0m     \u001b[0mtokenizer\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mload\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'tokenizers/punkt/{0}.pickle'\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mformat\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mlanguage\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 95\u001b[0;31m     \u001b[0;32mreturn\u001b[0m \u001b[0mtokenizer\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtokenize\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     96\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     97\u001b[0m \u001b[0;31m# Standard word tokenizer.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36mtokenize\u001b[0;34m(self, text, realign_boundaries)\u001b[0m\n\u001b[1;32m   1235\u001b[0m         \u001b[0mGiven\u001b[0m \u001b[0ma\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mreturns\u001b[0m \u001b[0ma\u001b[0m \u001b[0mlist\u001b[0m \u001b[0mof\u001b[0m \u001b[0mthe\u001b[0m \u001b[0msentences\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mthat\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1236\u001b[0m         \"\"\"\n\u001b[0;32m-> 1237\u001b[0;31m         \u001b[0;32mreturn\u001b[0m \u001b[0mlist\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0msentences_from_text\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrealign_boundaries\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1238\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1239\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0mdebug_decisions\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36msentences_from_text\u001b[0;34m(self, text, realign_boundaries)\u001b[0m\n\u001b[1;32m   1283\u001b[0m         \u001b[0mfollows\u001b[0m \u001b[0mthe\u001b[0m \u001b[0mperiod\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1284\u001b[0m         \"\"\"\n\u001b[0;32m-> 1285\u001b[0;31m         \u001b[0;32mreturn\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0ms\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0me\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0ms\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0me\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mspan_tokenize\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrealign_boundaries\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1286\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1287\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0m_slices_from_text\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36mspan_tokenize\u001b[0;34m(self, text, realign_boundaries)\u001b[0m\n\u001b[1;32m   1274\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mrealign_boundaries\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1275\u001b[0m             \u001b[0mslices\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_realign_boundaries\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mslices\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1276\u001b[0;31m         \u001b[0;32mreturn\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0msl\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstart\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msl\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstop\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0msl\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mslices\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1277\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1278\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0msentences_from_text\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrealign_boundaries\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mTrue\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36m<listcomp>\u001b[0;34m(.0)\u001b[0m\n\u001b[1;32m   1274\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mrealign_boundaries\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1275\u001b[0m             \u001b[0mslices\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_realign_boundaries\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mslices\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1276\u001b[0;31m         \u001b[0;32mreturn\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0msl\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstart\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msl\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstop\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0msl\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mslices\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1277\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1278\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0msentences_from_text\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrealign_boundaries\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mTrue\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36m_realign_boundaries\u001b[0;34m(self, text, slices)\u001b[0m\n\u001b[1;32m   1314\u001b[0m         \"\"\"\n\u001b[1;32m   1315\u001b[0m         \u001b[0mrealign\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;36m0\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1316\u001b[0;31m         \u001b[0;32mfor\u001b[0m \u001b[0msl1\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msl2\u001b[0m \u001b[0;32min\u001b[0m \u001b[0m_pair_iter\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mslices\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1317\u001b[0m             \u001b[0msl1\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mslice\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0msl1\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstart\u001b[0m \u001b[0;34m+\u001b[0m \u001b[0mrealign\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msl1\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstop\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1318\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0msl2\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36m_pair_iter\u001b[0;34m(it)\u001b[0m\n\u001b[1;32m    310\u001b[0m     \"\"\"\n\u001b[1;32m    311\u001b[0m     \u001b[0mit\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0miter\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mit\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 312\u001b[0;31m     \u001b[0mprev\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mnext\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mit\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    313\u001b[0m     \u001b[0;32mfor\u001b[0m \u001b[0mel\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mit\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    314\u001b[0m         \u001b[0;32myield\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0mprev\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mel\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/nltk/tokenize/punkt.py\u001b[0m in \u001b[0;36m_slices_from_text\u001b[0;34m(self, text)\u001b[0m\n\u001b[1;32m   1287\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0m_slices_from_text\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtext\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1288\u001b[0m         \u001b[0mlast_break\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;36m0\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1289\u001b[0;31m         \u001b[0;32mfor\u001b[0m \u001b[0mmatch\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_lang_vars\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mperiod_context_re\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfinditer\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtext\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1290\u001b[0m             \u001b[0mcontext\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mmatch\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mgroup\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;34m+\u001b[0m \u001b[0mmatch\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mgroup\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'after_tok'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1291\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtext_contains_sentbreak\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcontext\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mTypeError\u001b[0m: expected string or bytes-like object"
+     ]
+    }
+   ],
+   "source": [
+    "test_list = list(lab['comment'])\n",
+    "\n",
+    "test_sent = sent_tokenize([word for word in test_list])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['0', 'Everyone', 'knows', 'brand', \"'s\", 'papers', 'from.\\\\nBut', '-No', '...', '1', 'ñYour', 'paper', 'cut', 'balance', ':', '\\\\n-£25279102771î', '2', 'OH', 'SHIT', 'WHEN', 'I', 'SAW', 'THIS', 'ON', 'MY', 'FRONT', 'PAGE', '...', '...', '...', '3', 'Blowing', 'mind', 'yet', '4', 'Should', 'gone', 'Dunder', 'Mifflin', '5', 'Made', 'smile', '!', 'Great', 'work', '6', 'NaN', '7', 'The', 'mad', 'methodical', 'geniuses', '.', '8', 'Am', 'I', 'person', 'actually', 'loves', '...', '9', 'The', 'ad', 'best', '...', 'store', 'owner', 'saved', 'al', '...', '10', 'Waste', 'ink', 'paper', '!', '!', '!', '!', '!', '11', '*Lol', 'almost', 'fell', '**1:18*', '12', 'ever', 'thumbed', 'video', 'ya', 'mommas', 'hoe', '13', 'takes', '40', 'trees', 'create', 'mv', '14', '__', '15', 'Ah', 'yes', 'novelty', 'band', 'returns', '.', '16', 'This', 'music', 'reminds', 'FNAF', '2', 'song', 'TheLiv', '...', '17', 'Thanks', 'warning', 'us', 'seizures', 'caus', '...', '18', 'Fire', 'music', 'video', '19', 'I', 'like', 'keep', 'good', 'work', '.', 'Me', 'personally', '...', '20', 'Vàyanse', 'la', 'verga', '21', 'Vayanse', 'la', 'verga', '...', '.', 'No', 'mames', '...', 'Que', 'chingÑn', '...', '22', 'I', 'got', 'strange', 'nagging', 'sensation', 'kept', '...', '23', 'Ok', 'Go', '!', '24', 'Should', 'called', '``', 'Destroy', 'Planet', \"''\", '...', '25', 'ohmygodtheymadeanotherone', '26', 'Their', 'music', 'videos', 'never', 'fail', 'amaze', '27', 'Boring', '.', 'Not', 'worth', '.', '28', 'If', 'real\\x83', 'waste', 'crappy', 'video', '!', '29', '________', '...', '4316', 'noice', '4317', 'So', 'excited', '4318', 'Excellent', 'job', '.', '4319', 'IM', 'SCREAMING', 'ITS', 'SO', 'BEAUTIFUL', '4320', 'ITS', 'TRIPPY', '4321', 'I', 'know', 'im', 'obssesed', 'guys', '4322', 'ooo', 'ca', \"n't\", 'wait', '4323', 'THIS', 'IS', 'AMAZING', '4324', 'Woooooohooooo', '4325', 'wonderful', '!', '4326', 'Not', 'even', 'cleaner', 'could', 'clean', 'mess', '4327', 'This', 'gon', 'na', 'good', '4328', 'New', 'Ok', 'Go', 'video', 'something', 'thankful', '.', '4329', 'Man', '...', 'looks', 'like', 'big', 'mess', 'clean', '4330', 'These', 'guys', 'still', 'make', 'best', 'videos', '.', '4331', 'Ok', 'Go', 'back', 'swell', 'music', '...', '4332', 'Finally', 'music', 'video', '4333', 'OH', 'SHIT', 'THEYRE', 'BACK', 'LETS', 'GOOOOOOOOOO', '4334', 'So', 'much', 'time', 'since', 'last', 'video', '!', '!', 'So', 'hyped', '4335', '<', '3', '4336', 'Men', 'tights', '4337', 'ITS', 'OBESSION', '4338', 'Never', 'clicked', 'quickly', '.', '4339', 'Yooo', '4340', 'Hello', 'fave', 'band', '4341', 'So', 'early', 'notification', 'yet', '4342', 'Yay', '4343', 'Two', 'days', '17', 'views', '?', '!', '!', '4344', 'wow', 'took', 'long', ':', ')', '4345', 'Love', 'video', 'tho', 'good', 'work', 'everyone', 'Name', ':', 'comment', ',', 'Length', ':', '4346', ',', 'dtype', ':', 'object']\n"
+     ]
+    }
+   ],
+   "source": [
+    "stop_words = set(stopwords.words('english')) # stop words that are not important to sentiment\n",
+    "\n",
+    "# print(stop_words) # does not remove syntax\n",
+    "\n",
+    "\n",
+    "filtered_comments = []\n",
+    "for w in x_word:\n",
+    "    if w not in stop_words:\n",
+    "        filtered_comments.append(w)\n",
+    "\n",
+    "print(filtered_comments) # new, filtered dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 62,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'nltk.text.Text'>\n"
+     ]
+    }
+   ],
+   "source": [
+    "### Remove syntax / punctuation\n",
+    "filt_str = str(filtered_comments) # as string\n",
+    "com_clean = nltk.wordpunct_tokenize(filt_str) # punctuation tokenization\n",
+    "com_text = nltk.Text(com_clean) \n",
+    "print(type(com_text)) # nltk.text.Text\n",
+    "# isalpha() checks whether the string consists of alphabetic characters only:\n",
+    "lower_words = [w.lower() for w in text if w.isalpha()] # turn to lowercase and remove non-ASCII characters\n",
+    "# print(lower_words)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "# coms = lab[,1]\n",
+    "# comments = lab.iloc[:,1]\n",
+    "\n",
+    "# com_words = word_tokenize(comments)\n",
+    "\n",
+    "# print(comments.head(5))\n",
+    "# type(comments) # pandas.core.series.Series\n",
+    "# type(comments[1]) # string"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['everyone', 'knows', 'brand', 's', 'papers', 'from', 'nbut', 'no', 'ñyour', 'paper', 'cut', 'balance', 'n', 'oh', 'shit', 'when', 'i', 'saw', 'this', 'on', 'my', 'front', 'page', 'blowing', 'mind', 'yet', 'should', 'gone', 'dunder', 'mifflin', 'made', 'smile', 'great', 'work', 'nan', 'the', 'mad', 'methodical', 'geniuses', 'am', 'i', 'person', 'actually', 'loves', 'the', 'ad', 'best', 'store', 'owner', 'saved', 'al', 'waste', 'ink', 'paper', 'lol', 'almost', 'fell', 'ever', 'thumbed', 'video', 'ya', 'mommas', 'hoe', 'takes', 'trees', 'create', 'mv', 'ah', 'yes', 'novelty', 'band', 'returns', 'this', 'music', 'reminds', 'fnaf', 'song', 'theliv', 'thanks', 'warning', 'us', 'seizures', 'caus', 'fire', 'music', 'video', 'i', 'like', 'keep', 'good', 'work', 'me', 'personally', 'vàyanse', 'la', 'verga', 'vayanse', 'la', 'verga', 'no', 'mames', 'que', 'chingñn', 'i', 'got', 'strange', 'nagging', 'sensation', 'kept', 'ok', 'go', 'should', 'called', 'destroy', 'planet', 'ohmygodtheymadeanotherone', 'their', 'music', 'videos', 'never', 'fail', 'amaze', 'boring', 'not', 'worth', 'if', 'real', 'waste', 'crappy', 'video', 'noice', 'so', 'excited', 'excellent', 'job', 'im', 'screaming', 'its', 'so', 'beautiful', 'its', 'trippy', 'i', 'know', 'im', 'obssesed', 'guys', 'ooo', 'ca', 'n', 't', 'wait', 'this', 'is', 'amazing', 'woooooohooooo', 'wonderful', 'not', 'even', 'cleaner', 'could', 'clean', 'mess', 'this', 'gon', 'na', 'good', 'new', 'ok', 'go', 'video', 'something', 'thankful', 'man', 'looks', 'like', 'big', 'mess', 'clean', 'these', 'guys', 'still', 'make', 'best', 'videos', 'ok', 'go', 'back', 'swell', 'music', 'finally', 'music', 'video', 'oh', 'shit', 'theyre', 'back', 'lets', 'goooooooooo', 'so', 'much', 'time', 'since', 'last', 'video', 'so', 'hyped', 'men', 'tights', 'its', 'obession', 'never', 'clicked', 'quickly', 'yooo', 'hello', 'fave', 'band', 'so', 'early', 'notification', 'yet', 'yay', 'two', 'days', 'views', 'wow', 'took', 'long', 'love', 'video', 'tho', 'good', 'work', 'everyone', 'name', 'comment', 'length', 'dtype', 'object']\n"
+     ]
+    }
+   ],
+   "source": [
+    "all_words = []\n",
+    "for i in lower_words:\n",
+    "    y = str(i)\n",
+    "    all_words.append(y.lower())  # turn to lower case strings if not already\n",
+    "    \n",
+    "print(all_words) "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 87,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['everyone', 'knows', 'brand', 's', 'papers', 'from', 'nbut', 'no', 'ñyour', 'paper', 'cut', 'balance', 'n', 'oh', 'shit', 'when', 'i', 'saw', 'this', 'on', 'my', 'front', 'page', 'blowing', 'mind', 'yet', 'should', 'gone', 'dunder', 'mifflin', 'made', 'smile', 'great', 'work', 'nan', 'the', 'mad', 'methodical', 'geniuses', 'am', 'person', 'actually', 'loves', 'ad', 'best', 'store', 'owner', 'saved', 'al', 'waste', 'ink', 'lol', 'almost', 'fell', 'ever', 'thumbed', 'video', 'ya', 'mommas', 'hoe', 'takes', 'trees', 'create', 'mv', 'ah', 'yes', 'novelty', 'band', 'returns', 'music', 'reminds', 'fnaf', 'song', 'theliv', 'thanks', 'warning', 'us', 'seizures', 'caus', 'fire', 'like', 'keep', 'good', 'me', 'personally', 'vàyanse', 'la', 'verga', 'vayanse', 'mames', 'que', 'chingñn', 'got', 'strange', 'nagging', 'sensation', 'kept', 'ok', 'go', 'called', 'destroy', 'planet', 'ohmygodtheymadeanotherone', 'their', 'videos', 'never', 'fail', 'amaze', 'boring', 'not', 'worth', 'if', 'real', 'crappy', 'noice', 'so', 'excited', 'excellent', 'job', 'im', 'screaming', 'its', 'beautiful', 'trippy', 'know', 'obssesed', 'guys', 'ooo', 'ca', 't', 'wait', 'is', 'amazing', 'woooooohooooo', 'wonderful', 'even', 'cleaner', 'could', 'clean', 'mess', 'gon', 'na', 'new', 'something', 'thankful', 'man', 'looks', 'big', 'these', 'still', 'make', 'back', 'swell', 'finally', 'theyre', 'lets', 'goooooooooo', 'much', 'time', 'since', 'last', 'hyped', 'men', 'tights', 'obession', 'clicked', 'quickly', 'yooo', 'hello', 'fave', 'early', 'notification', 'yay', 'two', 'days', 'views', 'wow', 'took', 'long', 'love', 'tho', 'name', 'comment', 'length', 'dtype', 'object']\n",
+      "[2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 2, 2, 1, 5, 1, 4, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 5, 1, 1, 1, 2, 1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]\n"
+     ]
+    }
+   ],
+   "source": [
+    "freq_word =  nltk.FreqDist(all_words)\n",
+    "word_feat = freq_word.keys()\n",
+    "print(list(freq_word.keys()))\n",
+    "print(list(freq_word.values()))\n",
+    "# type(word_feat) # dict_keys"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 74,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[('video', 7), ('i', 5), ('music', 5), ('so', 5), ('this', 4), ('work', 3), ('good', 3), ('ok', 3), ('go', 3), ('its', 3), ('everyone', 2), ('no', 2), ('paper', 2), ('n', 2), ('oh', 2)]\n"
+     ]
+    }
+   ],
+   "source": [
+    "# all_words = nltk.FreqDist(lower_words)\n",
+    "# all_words = nltk.FreqDist(word_feat)\n",
+    "# print(all_words.most_common(15))\n",
+    "# print(all_words[\"wow\"])\n",
+    "\n",
+    "word_features = list(all_words.keys())[:1000] # new variable with 1000 most common words\n",
+    "# print(word_features)\n",
+    "\n",
+    "\n",
+    "print(all_words.most_common(15))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "#random.shuffle(lab)\n",
+    "\n",
+    "# create training and test sets with x (comments) and y (labels)\n",
+    "X_train, X_test, y_train, y_test = train_test_split(\n",
+    "                                        lab[\"comment\"], lab[\"label\"], \n",
+    "                                        test_size=0.25, \n",
+    "                                       random_state=42)\n",
+    "\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "    label                                            comment\n",
+      "1     0.0       ñYour paper cut balance is: \\n-£25279102771î\n",
+      "4     0.0               Should have gone with Dunder Mifflin\n",
+      "13    0.0                it takes 40 trees to create this mv\n",
+      "15    0.0                   Ah yes the novelty band returns.\n",
+      "16    0.0  This music reminds me of FNAF 2 song by TheLiv...\n"
+     ]
+    }
+   ],
+   "source": [
+    "zer_array = np.array(0)\n",
+    " \n",
+    "# neg_array = neg_array.append( df['label'].query('label' < 0) )\n",
+    "# pos_array = pos_array.append( df['label'].query('label' > 0))\n",
+    "zer_array = lab.loc[lab['label'] == 0 ]\n",
+    "print(zer_array.head(5))\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "count_vectorizer = CountVectorizer(stop_words=\"english\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "count_train = count_vectorizer.fit_transform(X_train.values.astype('U')) # transform using only comment column fit for training data\n",
+    "count_test = count_vectorizer.transform(X_test.values.astype('U')) # transform using only comment column NOT fit"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "'Series' object has no attribute 'length'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-39-5e0aeb8244cf>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0;31m#print(count_vectorizer.get_feature_names())\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 2\u001b[0;31m \u001b[0mprint\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mX_train\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mlength\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/pandas/core/generic.py\u001b[0m in \u001b[0;36m__getattr__\u001b[0;34m(self, name)\u001b[0m\n\u001b[1;32m   3079\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0mname\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_info_axis\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   3080\u001b[0m                 \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mname\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 3081\u001b[0;31m             \u001b[0;32mreturn\u001b[0m \u001b[0mobject\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m__getattribute__\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mname\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   3082\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   3083\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0m__setattr__\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mname\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mvalue\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mAttributeError\u001b[0m: 'Series' object has no attribute 'length'"
+     ]
+    }
+   ],
+   "source": [
+    "#print(count_vectorizer.get_feature_names())\n",
+    "print(X_train.length())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  (0, 2118)\t1\n",
+      "  (0, 4198)\t1\n",
+      "  (0, 4368)\t1\n",
+      "  (0, 1295)\t1\n",
+      "  (0, 131)\t1\n",
+      "  (1, 581)\t1\n",
+      "  (1, 1066)\t1\n",
+      "  (1, 2537)\t1\n",
+      "  (2, 2933)\t1\n",
+      "  (2, 2896)\t1\n",
+      "  (2, 2437)\t1\n",
+      "  (2, 3721)\t1\n",
+      "  (2, 2491)\t1\n",
+      "  (2, 3384)\t1\n",
+      "  (2, 4374)\t1\n",
+      "  (2, 1236)\t1\n",
+      "  (2, 2513)\t2\n",
+      "  (2, 516)\t1\n",
+      "  (2, 4167)\t1\n",
+      "  (2, 4136)\t1\n",
+      "  (2, 923)\t1\n",
+      "  (2, 3093)\t1\n",
+      "  (2, 129)\t1\n",
+      "  (2, 2261)\t1\n",
+      "  (2, 2604)\t1\n",
+      "  :\t:\n",
+      "  (3254, 1967)\t1\n",
+      "  (3255, 3170)\t1\n",
+      "  (3255, 698)\t1\n",
+      "  (3255, 3407)\t1\n",
+      "  (3255, 3036)\t1\n",
+      "  (3256, 381)\t1\n",
+      "  (3257, 1458)\t1\n",
+      "  (3257, 2786)\t1\n",
+      "  (3257, 2554)\t1\n",
+      "  (3257, 2490)\t2\n",
+      "  (3258, 1190)\t1\n",
+      "  (3258, 3494)\t1\n",
+      "  (3258, 2467)\t1\n",
+      "  (3258, 3976)\t1\n",
+      "  (3258, 2866)\t1\n",
+      "  (3258, 968)\t1\n",
+      "  (3258, 1817)\t1\n",
+      "  (3258, 1892)\t1\n",
+      "  (3258, 2403)\t1\n",
+      "  (3258, 1967)\t1\n",
+      "  (3259, 2718)\t1\n",
+      "  (3260, 4221)\t1\n",
+      "  (3260, 3351)\t1\n",
+      "  (3260, 1742)\t1\n",
+      "  (3260, 384)\t1\n"
+     ]
+    }
+   ],
+   "source": [
+    "# np.isnan(count_train)\n",
+    "# np.all(np.isfinite(count_train))\n",
+    "type(count_train) # scipy.sparse.csr.csr_matrix: SciPy 2-D sparse matrix\n",
+    "\n",
+    "print(count_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "nb_class = MultinomialNB()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ValueError",
+     "evalue": "Input contains NaN, infinity or a value too large for dtype('float64').",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-37-b6ab06241afb>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mnb_class\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfit\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcount_train\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0my_train\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/sklearn/naive_bayes.py\u001b[0m in \u001b[0;36mfit\u001b[0;34m(self, X, y, sample_weight)\u001b[0m\n\u001b[1;32m    577\u001b[0m             \u001b[0mReturns\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    578\u001b[0m         \"\"\"\n\u001b[0;32m--> 579\u001b[0;31m         \u001b[0mX\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0my\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mcheck_X_y\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mX\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0my\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m'csr'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    580\u001b[0m         \u001b[0m_\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mn_features\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mX\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mshape\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    581\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/sklearn/utils/validation.py\u001b[0m in \u001b[0;36mcheck_X_y\u001b[0;34m(X, y, accept_sparse, dtype, order, copy, force_all_finite, ensure_2d, allow_nd, multi_output, ensure_min_samples, ensure_min_features, y_numeric, warn_on_dtype, estimator)\u001b[0m\n\u001b[1;32m    577\u001b[0m     \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    578\u001b[0m         \u001b[0my\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mcolumn_or_1d\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0my\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mwarn\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mTrue\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 579\u001b[0;31m         \u001b[0m_assert_all_finite\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0my\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    580\u001b[0m     \u001b[0;32mif\u001b[0m \u001b[0my_numeric\u001b[0m \u001b[0;32mand\u001b[0m \u001b[0my\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdtype\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mkind\u001b[0m \u001b[0;34m==\u001b[0m \u001b[0;34m'O'\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    581\u001b[0m         \u001b[0my\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0my\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mastype\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mnp\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfloat64\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/sklearn/utils/validation.py\u001b[0m in \u001b[0;36m_assert_all_finite\u001b[0;34m(X)\u001b[0m\n\u001b[1;32m     42\u001b[0m             and not np.isfinite(X).all()):\n\u001b[1;32m     43\u001b[0m         raise ValueError(\"Input contains NaN, infinity\"\n\u001b[0;32m---> 44\u001b[0;31m                          \" or a value too large for %r.\" % X.dtype)\n\u001b[0m\u001b[1;32m     45\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     46\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mValueError\u001b[0m: Input contains NaN, infinity or a value too large for dtype('float64')."
+     ]
+    }
+   ],
+   "source": [
+    "nb_class.fit(count_train, y_train) "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 60,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NotFittedError",
+     "evalue": "This MultinomialNB instance is not fitted yet. Call 'fit' with appropriate arguments before using this method.",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mNotFittedError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-60-8d6e3f1def84>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mpred\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mnb_classifier\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mpredict\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcount_test\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/sklearn/naive_bayes.py\u001b[0m in \u001b[0;36mpredict\u001b[0;34m(self, X)\u001b[0m\n\u001b[1;32m     64\u001b[0m             \u001b[0mPredicted\u001b[0m \u001b[0mtarget\u001b[0m \u001b[0mvalues\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0mX\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     65\u001b[0m         \"\"\"\n\u001b[0;32m---> 66\u001b[0;31m         \u001b[0mjll\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_joint_log_likelihood\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mX\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     67\u001b[0m         \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mclasses_\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mnp\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0margmax\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mjll\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0maxis\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     68\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/sklearn/naive_bayes.py\u001b[0m in \u001b[0;36m_joint_log_likelihood\u001b[0;34m(self, X)\u001b[0m\n\u001b[1;32m    720\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0m_joint_log_likelihood\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mX\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    721\u001b[0m         \u001b[0;34m\"\"\"Calculate the posterior log probability of the samples X\"\"\"\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 722\u001b[0;31m         \u001b[0mcheck_is_fitted\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m\"classes_\"\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    723\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    724\u001b[0m         \u001b[0mX\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mcheck_array\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mX\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0maccept_sparse\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;34m'csr'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/sklearn/utils/validation.py\u001b[0m in \u001b[0;36mcheck_is_fitted\u001b[0;34m(estimator, attributes, msg, all_or_any)\u001b[0m\n\u001b[1;32m    766\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    767\u001b[0m     \u001b[0;32mif\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0mall_or_any\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mhasattr\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mestimator\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mattr\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0mattr\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mattributes\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 768\u001b[0;31m         \u001b[0;32mraise\u001b[0m \u001b[0mNotFittedError\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mmsg\u001b[0m \u001b[0;34m%\u001b[0m \u001b[0;34m{\u001b[0m\u001b[0;34m'name'\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mtype\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mestimator\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m__name__\u001b[0m\u001b[0;34m}\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    769\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    770\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mNotFittedError\u001b[0m: This MultinomialNB instance is not fitted yet. Call 'fit' with appropriate arguments before using this method."
+     ]
+    }
+   ],
+   "source": [
+    "pred = nb_classifier.predict(count_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "score = metrics.accuracy_score(y_test, pred)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.2"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

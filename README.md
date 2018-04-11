@@ -27,3 +27,11 @@ Using natural language processing (nlp) and machine learning (ml) algorithms to 
 ## Links:
 1. [Requirements](https://github.com/UCSB-dataScience-ProjectGroup/youtube/requirements.txt)
 2. [API](https://developers.google.com/youtube/v3/)
+
+## Dashboard (In Progress): 
+![dashboard screenshot](https://github.com/UCSB-dataScience-ProjectGroup/youtube/blob/Andies-Branch/images/Dashboard_Screenshot.png)
+
+### Table of Contents: 
+1. Youtube API Call: [apiCall3.py](https://github.com/UCSB-dataScience-ProjectGroup/youtube/blob/Andies-Branch/apiCall3.py)
+2. Machine Learning Notebook: [Youtube_Analysis.ipynb](https://github.com/UCSB-dataScience-ProjectGroup/youtube/blob/Andies-Branch/Youtube_Analysis.ipynb)
+3. Dashboard Script: [PP.py](https://github.com/UCSB-dataScience-ProjectGroup/youtube/blob/Andies-Branch/PP.py)

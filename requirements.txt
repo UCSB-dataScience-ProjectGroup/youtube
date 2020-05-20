@@ -9,7 +9,7 @@ Flask==0.12.2
 Flasky==0.1.0
 functools32==3.2.3.post2
 google-api-python-client==1.6.4
-httplib2==0.10.3
+httplib2==0.18.0
 idna==2.6
 ipython-genutils==0.2.0
 itsdangerous==0.24

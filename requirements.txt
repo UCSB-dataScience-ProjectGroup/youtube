@@ -41,6 +41,6 @@ sklearn==0.0
 subprocess32==3.2.7
 traitlets==4.3.2
 uritemplate==3.0.0
-urllib3==1.22
+urllib3==1.26.5
 virtualenv==15.1.0
 Werkzeug==0.15.3
